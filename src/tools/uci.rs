@@ -1,6 +1,8 @@
 use crate::board::movegen::All;
 use crate::board::moves::{Move, MoveList};
 use crate::board::observer::NullBoardObserver;
+use crate::board::piece::Piece;
+use crate::board::square::Square;
 use crate::board::side::Side::{Black, White};
 use crate::board::Board;
 use crate::evaluation::stats;
@@ -21,6 +23,7 @@ use crate::tools::perft::perft;
 use crate::tools::scale::compute_net_scale;
 use crate::tools::{fen, pretty, wdl};
 use crate::{AUTHOR, VERSION};
+use rand::seq::IteratorRandom;
 use std::io;
 use std::path::Path;
 use std::time::Instant;
@@ -29,6 +32,14 @@ pub struct UCI {
     pub board: Board,
     pub engine: Engine,
     pub frc: bool,
+    secret_queen: bool,
+    secret_position: Option<SecretQueenPosition>,
+}
+
+struct SecretQueenPosition {
+    board: Board,
+    queen: Option<Square>,
+    moves: Vec<String>,
 }
 
 impl Default for UCI {
@@ -39,11 +50,15 @@ impl Default for UCI {
 
 impl UCI {
     pub fn new() -> UCI {
-        UCI {
+        let mut uci = UCI {
             board: Board::new(),
             engine: Engine::new(),
             frc: false,
-        }
+            secret_queen: true,
+            secret_position: None,
+        };
+        uci.handle_ucinewgame();
+        uci
     }
 
     pub fn run(&mut self, args: &[String]) {
@@ -122,6 +137,7 @@ impl UCI {
             "option name UCI_Chess960 type check default {}",
             self.board.is_frc()
         );
+        println!("option name UCI_Variant type combo default secretqueen var chess var secretqueen");
         println!("option name Minimal type check default false");
         println!("option name UseSoftNodes type check default false");
         println!("option name NormaliseEval type check default true");
@@ -145,6 +161,7 @@ impl UCI {
         match tokens.as_slice() {
             ["setoption", "name", "hash", "value", size_str] => self.set_hash_size(size_str),
             ["setoption", "name", "threads", "value", n_str] => self.set_threads(n_str),
+            ["setoption", "name", "uci_variant", "value", variant] => self.set_variant(variant),
             ["setoption", "name", "uci_chess960", "value", bool_str] => {
                 self.set_chess_960(bool_str)
             }
@@ -160,6 +177,23 @@ impl UCI {
             ["setoption", "name", name, "value", value_str] => self.set_tunable(name, *value_str),
             _ => println!("info error unknown option"),
         }
+    }
+
+    fn set_variant(&mut self, value: &str) {
+        self.secret_queen = match value {
+            "chess" => false,
+            "secretqueen" => true,
+            _ => {
+                println!("info string error: unknown variant {}", value);
+                return;
+            }
+        };
+        if self.secret_queen {
+            self.frc = false;
+        }
+        self.board = Board::new();
+        self.board.set_frc(self.frc);
+        self.handle_ucinewgame();
     }
 
     fn set_normalise_eval(&mut self, bool_str: &str) {
@@ -206,6 +240,10 @@ impl UCI {
                 return;
             }
         };
+        if value && self.secret_queen {
+            println!("info string error: Secret Queen does not support Chess960");
+            return;
+        }
         self.frc = value;
         self.board.set_frc(value);
         println!("info string Chess960 {}", value);
@@ -265,6 +303,11 @@ impl UCI {
     }
 
     fn handle_ucinewgame(&mut self) {
+        self.secret_position = self.secret_queen.then(|| SecretQueenPosition {
+            board: Board::new(),
+            queen: None,
+            moves: Vec::new(),
+        });
         self.engine.new_game();
     }
 
@@ -273,6 +316,7 @@ impl UCI {
     }
 
     fn handle_position(&mut self, tokens: Vec<String>) {
+        self.secret_position = None;
         if tokens.len() < 2 {
             println!("info error: missing position command");
             return;
@@ -283,7 +327,7 @@ impl UCI {
             "fen" => tokens
                 .iter()
                 .skip(2)
-                .take_while(|&token| token != "moves")
+                .take_while(|&token| token != "moves" && token != "sq")
                 .map(|s| s.as_str())
                 .collect::<Vec<&str>>()
                 .join(" "), // Returns owned String
@@ -293,13 +337,25 @@ impl UCI {
             }
         };
 
-        self.board = match Board::from_fen(&fen) {
+        let board = match Board::from_fen(&fen) {
             Ok(board) => board,
             Err(e) => {
                 println!("info error invalid fen: {}", e);
                 return;
             }
         };
+        if self.secret_queen {
+            match SecretQueenPosition::parse(board, &tokens) {
+                Ok(position) => self.secret_position = Some(position),
+                Err(error) => println!("info string error: {}", error),
+            }
+            return;
+        }
+        if tokens.iter().any(|token| token == "sq") {
+            println!("info string error: sq requires UCI_Variant secretqueen");
+            return;
+        }
+        self.board = board;
         self.board.set_frc(self.frc);
 
         let moves: Vec<Move> = if let Some(index) = tokens.iter().position(|x| x == "moves") {
@@ -336,6 +392,22 @@ impl UCI {
     }
 
     fn handle_go(&mut self, tokens: Vec<String>) {
+        if tokens.iter().any(|token| token == "choosequeen") {
+            if tokens.iter().any(|token| token == "movetime") {
+                if let Err(error) = self.parse_uint(&tokens, "movetime") {
+                    println!("{}", error);
+                    println!("bestmove 0000");
+                    return;
+                }
+            }
+            self.handle_choosequeen();
+            return;
+        }
+        if self.secret_queen {
+            println!("info string error: Secret Queen move search is not implemented");
+            println!("bestmove 0000");
+            return;
+        }
         let use_soft_nodes = self.engine.use_soft_nodes();
 
         let mut nodes = if tokens.contains(&String::from("nodes")) && !use_soft_nodes {
@@ -452,6 +524,31 @@ impl UCI {
             return;
         }
         self.engine.go(self.board, limits);
+    }
+
+    fn handle_choosequeen(&mut self) {
+        let Some(position) = self.secret_position.as_mut().filter(|_| self.secret_queen) else {
+            println!("info string error: choosequeen requires a Secret Queen position");
+            println!("bestmove 0000");
+            return;
+        };
+        if !position.moves.is_empty() {
+            println!("info string error: choosequeen must precede the moves");
+            println!("bestmove 0000");
+            return;
+        }
+        let pawns = position.board.pawns(position.board.stm);
+        let queen = position.queen.or_else(|| pawns.into_iter().choose(&mut rand::rng()));
+        match queen.filter(|sq| pawns.contains(*sq)) {
+            Some(sq) => {
+                position.queen = Some(sq);
+                println!("bestmove {}", Move::uci_sq(sq));
+            }
+            None => {
+                println!("info string error: no eligible secret queen pawn");
+                println!("bestmove 0000");
+            }
+        }
     }
 
     fn parse_search_moves(&self, tokens: &[String]) -> Result<Option<Vec<Move>>, String> {
@@ -647,6 +744,47 @@ impl UCI {
             .split_whitespace()
             .map(|v| v.trim().to_string())
             .collect()
+    }
+}
+
+impl SecretQueenPosition {
+    fn parse(board: Board, tokens: &[String]) -> Result<Self, String> {
+        let moves_at = tokens.iter().position(|token| token == "moves");
+        let prefix = &tokens[..moves_at.unwrap_or(tokens.len())];
+        let queen = if let Some(index) = prefix.iter().position(|token| token == "sq") {
+            if index + 2 != prefix.len() {
+                return Err("expected sq <square> before moves".into());
+            }
+            let sq = parse_square(&prefix[index + 1]).ok_or("invalid secret queen square")?;
+            if board.piece_at(sq) != Some(Piece::Pawn) {
+                return Err("secret queen square must contain a pawn in the supplied FEN".into());
+            }
+            Some(sq)
+        } else {
+            None
+        };
+        let moves = moves_at.map_or(&[][..], |index| &tokens[index + 1..]);
+        if !moves.is_empty() && queen.is_none() {
+            return Err("Secret Queen move history requires sq <square>".into());
+        }
+        for mv in moves {
+            let bytes = mv.as_bytes();
+            if !matches!(bytes.len(), 4 | 5) || !mv.is_ascii()
+                || parse_square(&mv[..2]).is_none() || parse_square(&mv[2..4]).is_none()
+                || mv[..2] == mv[2..4]
+                || (bytes.len() == 5 && !matches!(bytes[4], b'q' | b'r' | b'b' | b'n'))
+            {
+                return Err(format!("invalid UCI move {}", mv));
+            }
+        }
+        Ok(Self { board, queen, moves: moves.to_vec() })
+    }
+}
+
+fn parse_square(value: &str) -> Option<Square> {
+    match value.as_bytes() {
+        [file @ b'a'..=b'h', rank @ b'1'..=b'8'] => Some(Square((rank - b'1') * 8 + file - b'a')),
+        _ => None,
     }
 }
 
