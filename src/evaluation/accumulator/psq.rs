@@ -6,7 +6,7 @@ use crate::evaluation::cache::InputBucketCache;
 use crate::evaluation::feature::psq::PieceSquareFeature;
 use crate::evaluation::{king_bucket, should_mirror, simd, NETWORK, NNUE};
 use arrayvec::ArrayVec;
-use hobbes_nnue_arch::{PieceSquareWeights, L1_SIZE};
+use imposter_nnue_arch::{PieceSquareWeights, L1_SIZE};
 
 /// The `PieceSquareAccumulator` holds the pre-activations of the first layer of the neural network.
 /// The input layer just encodes the positions of pieces on the board, from the perspective of both

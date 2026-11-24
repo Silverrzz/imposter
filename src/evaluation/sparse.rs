@@ -1,5 +1,5 @@
 use crate::evaluation::simd;
-use hobbes_nnue_arch::L1_SIZE;
+use imposter_nnue_arch::L1_SIZE;
 
 // Credit to Pawnocchio and Viridithas authors from whom this implementation was shamelessly yoinked.
 

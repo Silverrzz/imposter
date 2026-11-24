@@ -1,4 +1,4 @@
-use hobbes_nnue_arch::L0_SHIFT;
+use imposter_nnue_arch::L0_SHIFT;
 use std::{arch::x86_64::*, mem::size_of};
 
 pub const I32_LANES: usize = size_of::<__m256i>() / size_of::<i32>();
@@ -60,7 +60,7 @@ pub mod u16 {
 
 pub mod i16 {
     use crate::evaluation::simd::VecI16;
-    use hobbes_nnue_arch::L0_SHIFT;
+    use imposter_nnue_arch::L0_SHIFT;
     use std::{arch::x86_64::*, mem::size_of};
 
     pub const LANES: usize = size_of::<VecI16>() / size_of::<i16>();

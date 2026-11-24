@@ -1,6 +1,7 @@
 .idea
 *.iml
-hobbes-chess-engine
+imposter
+imposter.exe
 data
 *.nnue
 activations.txt

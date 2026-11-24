@@ -33,17 +33,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "hobbes-chess-engine"
-version = "0.1.0"
+name = "imposter"
+version = "0.0.0"
 dependencies = [
  "arrayvec",
- "hobbes-nnue-arch",
+ "imposter-nnue-arch",
  "rand",
 ]
 
 [[package]]
-name = "hobbes-nnue-arch"
-version = "0.1.0"
+name = "imposter-nnue-arch"
+version = "0.0.0"
 
 [[package]]
 name = "libc"

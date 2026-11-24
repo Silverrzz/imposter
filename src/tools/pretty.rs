@@ -11,7 +11,7 @@ pub fn print_uci_info() {
         format!("CalvinBench {CYAN}https://kelseyde.pythonanywhere.com/index/{RESET}");
     let mattbench_formatted = format!("MattBench {CYAN}https://chess.n9x.co/index/{RESET}");
     println!("┌───────────────────────────────────────────────────────────────────┐");
-    println!("│ Hobbes                                                            │");
+    println!("│ imposter                                                          │");
     println!("│ Version: {:<66}│", version_formatted);
     println!("│ Author: {:<67}│", author_formatted);
     println!("│ Contributors: {:<61}│", contributors_formatted);

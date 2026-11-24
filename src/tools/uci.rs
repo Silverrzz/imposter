@@ -20,7 +20,7 @@ use crate::tools::datagen::generate_random_openings;
 use crate::tools::perft::perft;
 use crate::tools::scale::compute_net_scale;
 use crate::tools::{fen, pretty, wdl};
-use crate::VERSION;
+use crate::{AUTHOR, VERSION};
 use std::io;
 use std::path::Path;
 use std::time::Instant;
@@ -108,8 +108,8 @@ impl UCI {
     }
 
     fn handle_uci(&self) {
-        println!("id name Hobbes {}", VERSION);
-        println!("id author Dan Kelsey");
+        println!("id name imposter {}", VERSION);
+        println!("id author {}", AUTHOR);
         println!(
             "option name Threads type spin default 1 min 1 max {}",
             MAX_THREADS

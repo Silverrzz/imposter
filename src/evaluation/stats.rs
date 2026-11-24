@@ -1,6 +1,6 @@
 use crate::board::Board;
 use crate::search::thread::ThreadData;
-use hobbes_nnue_arch::SCALE;
+use imposter_nnue_arch::SCALE;
 use std::fs;
 use std::path::Path;
 

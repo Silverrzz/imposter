@@ -3,9 +3,9 @@ use crate::evaluation::feature::threat;
 use crate::tools::uci::UCI;
 use board::ray;
 
-pub const AUTHOR: &str = "Dan Kelsey";
+pub const AUTHOR: &str = "Based on and forked from hobbes by Dan Kelsey";
 pub const CONTRIBUTORS: &str = "Jonathan Hallström, Mattia Giambirtone";
-pub const VERSION: &str = "4.0";
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// The board module contains board representation, move generation, move legality checking, and
 /// everything related to the rules of chess.

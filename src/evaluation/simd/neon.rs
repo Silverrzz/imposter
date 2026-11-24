@@ -59,7 +59,7 @@ pub mod u16 {
 
 pub mod i16 {
     use crate::evaluation::simd::VecI16;
-    use hobbes_nnue_arch::L0_SHIFT;
+    use imposter_nnue_arch::L0_SHIFT;
     use std::arch::aarch64::*;
 
     pub const LANES: usize = size_of::<VecI16>() / size_of::<i16>();

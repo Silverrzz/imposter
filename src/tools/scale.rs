@@ -1,6 +1,6 @@
 use crate::board::Board;
 use crate::evaluation::NNUE;
-use hobbes_nnue_arch::arch;
+use imposter_nnue_arch::arch;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 

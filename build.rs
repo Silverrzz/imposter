@@ -1,11 +1,11 @@
-use hobbes_nnue_arch::{preprocess, Network, UntransposedNetwork};
+use imposter_nnue_arch::{preprocess, Network, UntransposedNetwork};
 use std::env;
 use std::fs;
 use std::mem::size_of;
 use std::path::PathBuf;
 
-const INPUT_NET_FILE: &str = "hobbes.nnue";
-const OUTPUT_NET_FILE: &str = "hobbes_converted.nnue";
+const INPUT_NET_FILE: &str = "imposter.nnue";
+const OUTPUT_NET_FILE: &str = "imposter_converted.nnue";
 
 fn main() {
     // Load the raw network

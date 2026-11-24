@@ -6,7 +6,7 @@ use crate::board::side::Side;
 use crate::board::side::Side::*;
 use crate::board::square::Square;
 use crate::evaluation::accumulator::should_mirror;
-use hobbes_nnue_arch::L0_PAWN_PAIR_FEATURES;
+use imposter_nnue_arch::L0_PAWN_PAIR_FEATURES;
 use std::mem::transmute;
 
 /// This code computes the index of a given threat in the threat inputs accumulator. Everything here

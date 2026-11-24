@@ -1,4 +1,4 @@
-EXE ?= hobbes-chess-engine
+EXE ?= imposter
 
 ifeq ($(OS),Windows_NT)
     DETECTED_OS := Windows
@@ -26,8 +26,8 @@ export CARGO_BUILD_JOBS := $(JOBS)
 export CARGO_INCREMENTAL := 1
 
 openbench: download-net
-	cargo rustc --release -p hobbes-chess-engine --jobs $(JOBS) -- $(RUSTFLAGS) --emit link=$(EXE)
+	cargo rustc --release -p imposter --jobs $(JOBS) -- $(RUSTFLAGS) --emit link=$(EXE)
 
 download-net:
 	$(info Downloading network $(DEFAULT_NET).nnue)
-	curl -L -o hobbes.nnue https://github.com/kelseyde/hobbes-networks/releases/download/$(DEFAULT_NET)/$(DEFAULT_NET).nnue
+	curl -L -o imposter.nnue https://github.com/kelseyde/hobbes-networks/releases/download/$(DEFAULT_NET)/$(DEFAULT_NET).nnue

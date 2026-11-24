@@ -11,7 +11,7 @@ use crate::evaluation::feature::pp::{PawnPairFeature, PP_BANDS};
 use crate::evaluation::feature::threat::ThreatFeature;
 use crate::evaluation::{simd, NETWORK, NNUE};
 use arrayvec::ArrayVec;
-use hobbes_nnue_arch::L1_SIZE;
+use imposter_nnue_arch::L1_SIZE;
 
 const MAX_THREAT_FEATURES: usize = 80;
 const MAX_PAWN_PAIR_FEATURES: usize = 64;

@@ -44,7 +44,7 @@ use crate::search::parameters::{
 use crate::search::MAX_PLY;
 use crate::tools::utils::boxed_and_zeroed;
 use accumulator::{psq, threat};
-use hobbes_nnue_arch::{
+use imposter_nnue_arch::{
     Network, BUCKETS, L1_SIZE, L2_SIZE, L3_SIZE, OUTPUT_BUCKET_COUNT, Q, SCALE,
 };
 
